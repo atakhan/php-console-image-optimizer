@@ -5,16 +5,19 @@ $max_width = $default_width = 1200;
 $max_height = $default_height = 800;
 
 $required_arg = true;
-
+$recursive_mode = false;
 // Check arguments
+if (in_array('-r', $argv)) {
+	$recursive_mode = true;
+}
 if (!isset($argv[1])) {
 	echo Console::red("ERROR: file path not found \r\n");
 	$required_arg = false;
 }
-if (isset($argv[2])){
+if (isset($argv[2]) && $argv[2] != '-r'){
 	$max_width = $argv[2] > 0 ? $argv[2] : $default_width;
 }
-if (isset($argv[3])){
+if (isset($argv[3]) && $argv[2] != '-r'){
 	$max_height = $argv[3] > 0 ? $argv[3] : $default_height;
 }
 
@@ -23,19 +26,21 @@ if($required_arg){
 	$path = $argv[1];
 	if(is_dir($path)){
 		echo Console::yellow("\r\nResizing images in directory... \r\n");
-		$dir_path = $path;
-		$images = glob($dir_path . "\*.{jpg,png}", GLOB_BRACE);
-		foreach ($images as $key => $image_path) {
-			resizeImage($image_path, $max_width, $max_height);
+		if ($recursive_mode) {
+			echo Console::blue("\r\nRecursive mode! \r\n");
 		}
-		echo "\r\n========================================\r\n";
-		echo Console::green("Processed file count: ".count($images)." \r\n");
+		processFolder($path, $max_width, $max_height, $recursive_mode);
+
 	} else {
-		$image_path = $path;
+		
 		echo Console::yellow("\r\nResizing image... \r\n");
+		
+		$image_path = $path;
 		resizeImage($image_path, $max_width, $max_height);
+		
 		echo "\r\n========================================\r\n";
 		echo Console::green("Processed file count: 1 \r\n");
+
 	}
 } else {
 	showHelp();
@@ -45,13 +50,36 @@ if($required_arg){
 // UTILS
 // ------------------------------------------------------------
 
+function processFolder($path, $max_width, $max_height, $recursive_mode){
+	$only_dir_name = trim(basename($path).PHP_EOL);
+	echo Console::yellow("\r\nDirectory name: ".$only_dir_name);
+
+	$images = glob($path . "\*.{jpg,png}", GLOB_BRACE);
+	foreach ($images as $key => $image_path) {
+		resizeImage($image_path, $max_width, $max_height);
+	}
+	echo "========================================\r\n";
+	echo Console::green("Processed file count ($only_dir_name): ".count($images)." \r\n");
+
+	if ($recursive_mode) {
+		$dirs = glob($path . '/*' , GLOB_ONLYDIR);
+		foreach ($dirs as $key => $dir) {
+			$only_dir_name = basename($dir).PHP_EOL;
+			if (trim($only_dir_name) !== "output") {
+				processFolder($dir, $max_width, $max_height, $recursive_mode);
+			}
+		}
+	}
+}
+
+
 function resizeImage($image_path, $max_width, $max_height){
 	checkExists($image_path);
 	$original_info = getimagesize($image_path);
 	$file_size = (filesize($image_path))/1024;
 	$original_w = $original_info[0];
 	$original_h = $original_info[1];
-	echo "\r\n---------------------------\r\n";
+	echo "---------------------------\r\n";
 	echo "Original image info: 
   path: $image_path
   width: $original_w
@@ -134,7 +162,7 @@ function resizeAndSave($image_path, $size, $original_w, $original_h, $new_filena
 	echo "\r\n  path:".$new_filename;
 	echo "\r\n  width:".$size['w'];
 	echo "\r\n  height:".$size['h'];
-	echo "\r\n  size:".$new_file_size." kb";
+	echo "\r\n  size:".$new_file_size." kb\r\n";
 }
 
 function showHelp(){
