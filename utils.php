@@ -1,4 +1,5 @@
 <?php
+
 // ------------------------------------------------------------
 // UTILS
 // ------------------------------------------------------------
@@ -6,7 +7,6 @@
 function processFolder($path, $max_width, $max_height, $recursive_mode){
 	$only_dir_name = trim(basename($path).PHP_EOL);
 	echo Console::green("\r\nDirectory name: ".$only_dir_name);
-	echo Console::green("\r\n========================================");
 
 	$images = glob($path . "\*.{jpg,png}", GLOB_BRACE);
 	foreach ($images as $key => $image_path) {
@@ -33,7 +33,6 @@ function resizeImage($image_path, $max_width, $max_height){
 	$file_size = (filesize($image_path))/1024;
 	$original_w = $original_info[0];
 	$original_h = $original_info[1];
-	echo "\r\n----------------------------------------\r\n";
 	echo "Original image info:\r\n  path:"; 
   echo Console::yellow(" $image_path");
   echo "\r\n  width: $original_w
@@ -50,7 +49,7 @@ function checkExists($image_path){
 		exit();
 	}
 	if(!isImageExtensionAllowed($image_path)){
-		echo Console::red("ERROR: $image_path - file extension is not allowed. Try to load jpg or png image file");
+		echo Console::red("ERROR: $image_path - ERROR: file extension is not allowed. Try to load jpg or png image file");
 		exit();
 	}
 }
